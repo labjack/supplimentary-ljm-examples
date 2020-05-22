@@ -24,20 +24,21 @@ import time
 
 # Open first found LabJack
 handle = ljm.openS("ANY", "ANY", "ANY")  # Any device, Any connection, Any identifier
-#handle = ljm.openS("T7", "ANY", "ANY")  # T7 device, Any connection, Any identifier
-#handle = ljm.openS("T4", "ANY", "ANY")  # T4 device, Any connection, Any identifier
-#handle = ljm.open(ljm.constants.dtANY, ljm.constants.ctANY, "ANY")  # Any device, Any connection, Any identifier
+# handle = ljm.openS("T7", "ANY", "ANY")  # T7 device, Any connection, Any identifier
+# handle = ljm.openS("T4", "ANY", "ANY")  # T4 device, Any connection, Any identifier
+# handle = ljm.open(ljm.constants.dtANY, ljm.constants.ctANY, "ANY")  # Any device, Any connection, Any identifier
 
 info = ljm.getHandleInfo(handle)
-print("\nOpened a LabJack with Device type: %i, Connection type: %i,\n"
-      "Serial number: %i, IP address: %s, Port: %i,\nMax bytes per MB: %i" %
-      (info[0], info[1], info[2], ljm.numberToIP(info[3]), info[4], info[5]))
+print(
+    f"\nOpened a LabJack with Device type: {info[0]}, Connection type: {info[1]},\n"
+    f"Serial number: {info[2]}, IP address: {info[3]}, Port: {info[4]},\nMax bytes per MB: {info[5]}"
+)
 
 # Setup and call eReadName to read from AIN0 on the LabJack.
 name = "AIN0"
 numIterations = 10
-rate = 100 # in ms
-rateUS = rate*1000
+rate = 100  # in ms
+rateUS = rate * 1000
 
 
 # Get the current time to build a time-stamp.
@@ -50,16 +51,18 @@ timeStr = appStartTime.strftime("%Y_%m_%d-%I_%M_%S%p")
 cwd = os.getcwd()
 
 # Build a file-name and the file path.
-fileName = timeStr + "-%s-Example.csv"%(name)
+fileName = f"{timeStr}-{name}-Example.csv"
 filePath = os.path.join(cwd, fileName)
 
 # Open the file & write a header-line
-f = open(filePath, 'w')
-f.write("Time Stamp, Duration/Jitter (ms), %s" %(name))
+f = open(filePath, "w")
+f.write(f"Time Stamp, Duration/Jitter (ms), {name}")
 
 # Print some program-initialization information
-print("The time is: %s" %(startTimeStr))
-print("Reading %s %i times and saving data to the file:\n - %s\n" %(name, numIterations, filePath))
+print(f"The time is: {startTimeStr}")
+print(
+    f"Reading {name} {numIterations} times and saving data to the file:\n - {filePath}\n"
+)
 
 # Prepare final variables for program execution
 intervalHandle = 0
@@ -71,35 +74,38 @@ lastTick = ljm.getHostTick()
 duration = 0
 
 while curIteration < numIterations:
-	try:
-		numSkippedIntervals = ljm.waitForNextInterval(intervalHandle)
-		curTick = ljm.getHostTick()
-		duration = (curTick-lastTick)/1000
-		curTime = datetime.datetime.now()
-		curTimeStr = curTime.strftime("%Y/%m/%d %I:%M:%S%p")
+    try:
+        numSkippedIntervals = ljm.waitForNextInterval(intervalHandle)
+        curTick = ljm.getHostTick()
+        duration = (curTick - lastTick) / 1000
+        curTime = datetime.datetime.now()
+        curTimeStr = curTime.strftime("%Y/%m/%d %I:%M:%S%p")
 
-		# Read AIN0
-		result = ljm.eReadName(handle, name)
+        # Read AIN0
+        result = ljm.eReadName(handle, name)
 
-		# Print results
-		print("%s reading: %f V, duration: %0.1f ms, skipped intervals: %i" % (name, result, duration, numSkippedIntervals))
-		f.write("%s, %0.1f, %0.3f\r\n" %(curTimeStr, duration, result))
-		lastTick = curTick
-		curIteration = curIteration + 1
-	except KeyboardInterrupt:
-		break
-	except Exception:
-		import sys
-		print(sys.exc_info()[1])
-		break
+        # Print results
+        print(
+            f"{name} reading: {result} V, duration: {duration:.1f} ms, skipped intervals: {numSkippedIntervals}"
+        )
+        f.write(f"{curTimeStr}, {duration:.1f}, {result:.3f}\r\n")
+        lastTick = curTick
+        curIteration = curIteration + 1
+    except KeyboardInterrupt:
+        break
+    except Exception:
+        import sys
+
+        print(sys.exc_info()[1])
+        break
 
 print("\nFinished!")
 
-#Get the final time
+# Get the final time
 appEndTime = datetime.datetime.now()
 # endTimeStr = appEndTime.isoformat(timespec='milliseconds')
 endTimeStr = appStartTime.strftime("%Y/%m/%d %I:%M:%S%p")
-print("The final time is: %s" %(endTimeStr))
+print(f"The final time is: {endTimeStr}")
 
 # Close file
 f.close()
